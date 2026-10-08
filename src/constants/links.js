@@ -48,8 +48,8 @@ export const LINKS = {
   matrix:           "https://matrix.to/#/#ciatdel-foss:matrix.org",
 
   // Testnet (Signet)
-  signet:        "https://mempool.citadelfoss.xyz/",
-  signet_faucet: "https://faucet.citadelfoss.xyz/",
+  signet:        "https://mempool.openswap.live/",
+  signet_faucet: "https://faucet.openswap.live/",
 
   // Market data
   market_mainnet_makers_api: "https://market.openswap.live/api/mainnet/makers",
@@ -57,7 +57,7 @@ export const LINKS = {
   market_mainnet_explorer_tx_base: "https://mempool.space/tx",
   market_signet_makers_api: "https://market.openswap.live/api/makers",
   market_signet_health_api: "https://market.openswap.live/api/health",
-  market_signet_explorer_tx_base: "https://mempool.citadelfoss.xyz/tx",
+  market_signet_explorer_tx_base: "https://mempool.openswap.live/tx",
 
   // Taker App screenshots (vendored from the taker-app repo — GitHub raw
   // hotlinks get rate-limited, which intermittently broke the preview)

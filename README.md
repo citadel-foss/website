@@ -27,7 +27,7 @@ npm run deploy     # manual fallback deploy to gh-pages branch
 
 Automatic deploys run through GitHub Actions on every push to `main`.
 
-Live site: https://citadelfoss.xyz/
+Live site: https://openswap.live/
 
 One-time GitHub setup:
 

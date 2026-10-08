@@ -1,4 +1,4 @@
-const SITE_URL = 'https://citadelfoss.xyz'
+const SITE_URL = 'https://openswap.live'
 
 export const SOCIAL_PAGES = {
   '/': {

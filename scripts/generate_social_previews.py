@@ -60,7 +60,7 @@ def hero(draw, label, lines, subtitle, accent):
         y += 73
     draw.multiline_text((87, 427), subtitle, font=font(23), fill=MUTED, spacing=8)
     draw.rounded_rectangle((85, 544, 255, 553), radius=4, fill=accent)
-    draw.text((87, 566), "CITADELFOSS.XYZ", font=font(14, mono=True), fill=MUTED)
+    draw.text((87, 566), "OPENSWAP.LIVE", font=font(14, mono=True), fill=MUTED)
 
 
 def panel(draw, accent):
