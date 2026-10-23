@@ -1,9 +1,31 @@
 import { useState, useEffect } from 'react'
 
 const cache = new Map()
+const inflight = new Map()
 
 export function clearCache() {
   cache.clear()
+}
+
+// Fetches a doc once. Shared by the doc page and the docs search, so a doc
+// that was already read is never downloaded again.
+export function loadDoc(url) {
+  if (cache.has(url)) return Promise.resolve(cache.get(url))
+  if (inflight.has(url)) return inflight.get(url)
+
+  const request = fetch(url)
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return res.text()
+    })
+    .then(text => {
+      cache.set(url, text)
+      return text
+    })
+    .finally(() => inflight.delete(url))
+
+  inflight.set(url, request)
+  return request
 }
 
 export function useDocContent(url) {
@@ -13,14 +35,9 @@ export function useDocContent(url) {
     if (!url || cache.has(url)) return
 
     let cancelled = false
-    fetch(url)
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return res.text()
-      })
+    loadDoc(url)
       .then(text => {
         if (cancelled) return
-        cache.set(url, text)
         setResult({ url, content: text, error: null })
       })
       .catch(err => {

@@ -1,12 +1,19 @@
-import { useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, ExternalLink, Menu, X } from 'lucide-react'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, ArrowRight, ExternalLink, Menu, Search, X } from 'lucide-react'
 import PageHero from '../components/layout/PageHero'
 import CodeBlock from '../components/ui/CodeBlock'
 import DocsContent from '../components/docs/DocsContent'
 import DocsSidebar from '../components/docs/DocsSidebar'
 import { LINKS } from '../constants/links'
 import { DEVELOPER_DOCS_NAV, findDocById } from '../constants/docsNav'
+
+const loadSearchDialog = () => import('../components/docs/DocsSearchDialog')
+const DocsSearchDialog = lazy(loadSearchDialog)
+
+const SHORTCUT_LABEL = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent)
+  ? '⌘K'
+  : 'Ctrl K'
 
 const BUILD_COMMAND = `git clone https://github.com/citadel-foss/openswap
 cd openswap
@@ -68,33 +75,96 @@ function ExternalTextLink({ href, children, className = '' }) {
 
 export default function Developers() {
   const [docsOpen, setDocsOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
+  const { hash } = useLocation()
+  const navigate = useNavigate()
   const requestedDocId = searchParams.get('doc')
   const activeDoc = findDocById(requestedDocId, DEVELOPER_DOCS_NAV)
+
+  // Ctrl/Cmd+K opens the docs search anywhere on this page, and "/" does too
+  // unless the person is typing in a field.
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (event.defaultPrevented || event.isComposing) return
+
+      const target = event.target
+      const isTyping = target instanceof HTMLElement &&
+        (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))
+      const isShortcut = event.key.toLowerCase() === 'k' &&
+        (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey
+      const isSlash = event.key === '/' && !isTyping &&
+        !event.metaKey && !event.ctrlKey && !event.altKey
+
+      if (!isShortcut && !isSlash) return
+      event.preventDefault()
+      setSearchOpen(open => (isShortcut ? !open : true))
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   function handleDocSelect(doc) {
     if (!doc?.docId) return
 
+    setDocsOpen(false)
+    // Already on this doc: don't add a duplicate history entry.
+    if (doc.docId === requestedDocId && !hash) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+
     const nextSearchParams = new URLSearchParams(searchParams)
     nextSearchParams.set('doc', doc.docId)
-    setSearchParams(nextSearchParams, { replace: true })
-    setDocsOpen(false)
+    setSearchParams(nextSearchParams)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function handleSearchSelect(section) {
+    const nextHash = section.id ? `#${encodeURIComponent(section.id)}` : ''
+    setSearchOpen(false)
+    setDocsOpen(false)
+
+    // Already on that exact link: the router would do nothing, so scroll here.
+    if (requestedDocId === section.docId && hash === nextHash) {
+      if (section.id) document.getElementById(section.id)?.scrollIntoView()
+      else window.scrollTo(0, 0)
+      return
+    }
+
+    navigate({
+      pathname: '/developers',
+      search: `?doc=${encodeURIComponent(section.docId)}`,
+      hash: nextHash,
+    })
   }
 
   return (
     <div className="developer-hub site-shell">
       <title>{activeDoc ? `${activeDoc.label} — OpenSwap Docs` : 'Developers — OpenSwap'}</title>
-      <button
-        type="button"
-        onClick={() => setDocsOpen(open => !open)}
-        className="developer-hub__mobile-toggle"
-        aria-expanded={docsOpen}
-        aria-controls="developer-docs-sidebar"
-      >
-        {docsOpen ? <X size={17} aria-hidden="true" /> : <Menu size={17} aria-hidden="true" />}
-        <span>{activeDoc?.label || 'Explore documentation'}</span>
-      </button>
+      <div className="developer-hub__mobile-bar">
+        <button
+          type="button"
+          onClick={() => setDocsOpen(open => !open)}
+          className="developer-hub__mobile-toggle"
+          aria-expanded={docsOpen}
+          aria-controls="developer-docs-sidebar"
+        >
+          {docsOpen ? <X size={17} aria-hidden="true" /> : <Menu size={17} aria-hidden="true" />}
+          <span>{activeDoc?.label || 'Explore documentation'}</span>
+        </button>
+        <button
+          type="button"
+          className="developer-hub__mobile-search"
+          onClick={() => setSearchOpen(true)}
+          onFocus={loadSearchDialog}
+          aria-label="Search docs"
+          aria-haspopup="dialog"
+        >
+          <Search size={17} aria-hidden="true" />
+        </button>
+      </div>
 
       <aside
         id="developer-docs-sidebar"
@@ -103,6 +173,19 @@ export default function Developers() {
         <div className="developer-hub__sidebar-heading">
           <p className="section-label">// Documentation</p>
           <p>Explore OpenSwap</p>
+          <button
+            type="button"
+            className="docs-search-trigger"
+            onClick={() => setSearchOpen(true)}
+            onPointerEnter={loadSearchDialog}
+            onFocus={loadSearchDialog}
+            aria-haspopup="dialog"
+            aria-keyshortcuts="Control+K Meta+K"
+          >
+            <Search size={16} aria-hidden="true" />
+            <span>Search docs</span>
+            <kbd aria-hidden="true">{SHORTCUT_LABEL}</kbd>
+          </button>
         </div>
         <DocsSidebar
           nav={DEVELOPER_DOCS_NAV}
@@ -176,6 +259,12 @@ export default function Developers() {
           </>
         )}
       </main>
+
+      {searchOpen && (
+        <Suspense fallback={null}>
+          <DocsSearchDialog onClose={() => setSearchOpen(false)} onSelect={handleSearchSelect} />
+        </Suspense>
+      )}
     </div>
   )
 }

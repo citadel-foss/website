@@ -4,6 +4,7 @@ import { ExternalLink } from 'lucide-react'
 import { marked } from 'marked'
 import CodeBlock from '../ui/CodeBlock.jsx'
 import { useDocContent } from '../../hooks/useDocContent.js'
+import { createHeadingIds, headingText } from '../../lib/docHeadings.js'
 import { DEVELOPER_DOCS_NAV, getNavWithDocIds } from '../../constants/docsNav.js'
 
 let mermaidRenderId = 0
@@ -105,10 +106,6 @@ function resolveHtmlUrls(html, baseUrl) {
   )
 }
 
-function headingText(tokens) {
-  return tokens.map(token => token.tokens ? headingText(token.tokens) : token.text || '').join('')
-}
-
 function fragmentId(hash) {
   try {
     return decodeURIComponent(hash.slice(1))
@@ -120,17 +117,10 @@ function fragmentId(hash) {
 function renderMarkdown(content, baseUrl) {
   const renderer = new marked.Renderer()
   const renderCode = renderer.code.bind(renderer)
-  const headingIds = new Set()
+  const nextHeadingId = createHeadingIds()
 
   renderer.heading = function ({ depth, tokens }) {
-    const text = headingText(tokens)
-    const baseId = text.toLowerCase().trim()
-      .replace(/[\u2000-\u206f\u2e00-\u2e7f\\'!"#$%&()*+,./:;<=>?@[\]^`{|}~]/g, '')
-      .replace(/\s/g, '-')
-    let id = baseId
-    let suffix = 1
-    while (headingIds.has(id)) id = `${baseId}-${suffix++}`
-    headingIds.add(id)
+    const id = nextHeadingId(headingText(tokens))
     return `<h${depth} id="${escapeHtml(id)}">${this.parser.parseInline(tokens)}</h${depth}>`
   }
 

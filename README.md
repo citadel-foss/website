@@ -15,6 +15,7 @@ Marketing and documentation site for [OpenSwap](https://github.com/citadel-foss/
 ```bash
 npm install
 npm run dev
+npm test      # unit tests for the docs search
 ```
 
 ## Build & Deploy
