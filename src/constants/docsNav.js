@@ -116,6 +116,7 @@ export const DEVELOPER_DOCS_NAV = [
       { label: 'Tor', url: `${base}/tor.md` },
       { label: 'Docker', url: `${base}/docker.md` },
       { label: 'Taproot', url: `${base}/taproot.md` },
+      { label: 'Lightning', url: `${base}/lightning.md` },
       { label: 'Blocklist', url: `${base}/blocklist.md` },
       { label: 'Fee Policy', url: `${base}/fee-policy.md` },
       { label: 'Wallet Security', url: `${base}/wallet-security.md` },
@@ -133,6 +134,7 @@ export const DEVELOPER_DOCS_NAV = [
       { label: 'Privacy',      url: `${specBase}/general%20specs/privacy.md` },
       { label: 'Security',     url: `${specBase}/general%20specs/security.md` },
       { label: 'PaySwap',      url: `${specBase}/general%20specs/payswap.md`, repoUrl: LINKS.protocol_payswap },
+      { label: 'Tor Address',  url: `${specBase}/general%20specs/tor-address.md` },
     ],
   },
   {
